@@ -1,0 +1,6 @@
+boto3==1.22.0
+numpy==1.22.3
+Pillow==9.1.0
+streamlit==1.8.1
+pandas==1.4.2
+protobuf~=3.19.0

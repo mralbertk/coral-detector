@@ -1,0 +1,72 @@
+name: Deploy Frontend to Amazon ECR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - deployments/aws/app/**
+
+defaults:
+  run:
+    working-directory: deployments/aws/app
+
+env:
+  AWS_REGION: eu-west-1
+  IAM_ROLE: ${{ secrets.AWS_IAM_ROLE }}
+  ECR_REPOSITORY: ${{ secrets.ECR_FRONTEND_APP }}
+  IMAGE_TAG: dev
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: aws-dev
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ env.IAM_ROLE }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        # Build a docker container and push to ECR
+        docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
+        docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        echo "Successfully pushed ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:dev"
+
+    - name: Render Amazon ECS task definition
+      id: render-frontend-container
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: aws/frontend/frontend-definition.json
+        container-name: DstiCriobeStreamlitFrontend
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy to Amazon ECS service
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.render-frontend-container.outputs.task-definition }}
+        service: DstiCriobeFargate-Service
+        cluster: DstiCriobeFargateCluster
+        wait-for-service-stability: true
