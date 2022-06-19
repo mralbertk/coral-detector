@@ -7,6 +7,31 @@ from detectron2.engine import DefaultPredictor
 from detectron2.utils.visualizer import Visualizer, ColorMode
 from detectron2.data import DatasetCatalog, MetadataCatalog
 
+# This class should be in its own library, but we need to understand
+# Python custom library management better before implementing properly
+class ParamGetter:
+    """Recursively retrieves parameters from Amazon SSM.
+
+    Args:
+        param_path: A string, prefix of all parameters to look up
+    """
+
+    def __init__(self, param_path):
+        self.p_path = param_path
+        self.params = self.get_params()
+
+    def get_params(self):
+        ssm = boto3.client("ssm", region_name="eu-west-1")
+        params = {}
+        ssm_paginator = ssm.get_paginator("get_parameters_by_path")
+        response_iterator = ssm_paginator.paginate(
+            Path=self.p_path,
+            Recursive=True)
+        for response in response_iterator:
+            for param in response["Parameters"]:
+                params[param["Name"].split("/")[-1]] = param["Value"]
+        return params
+
 
 def handler(event, context):
     """TODO: Docstring"""
@@ -18,9 +43,10 @@ def handler(event, context):
     m_path = "/tmp/model.pth"
 
     # DB connection configuration TODO: Parameterize
-    db_name = "criobe_corals"
-    db_cluster_arn = "arn:aws:rds:eu-west-1:950138825908:cluster:dsti-criobe-db"
-    db_credentials_secret_store_arn = "arn:aws:secretsmanager:eu-west-1:950138825908:secret:rds-db-credentials/cluster-AIT5MBWGBYEYUB6C6HBFTP5GR4/dsti_criobe_app-L17eZ0"
+    params = ParamGetter('/coral-detector/').params
+    db_name = params["db-name"]
+    db_cluster_arn = params["db-cluster-arn"]
+    db_credentials_secret_store_arn = params["cluster-credentials"]
 
     # Connect to AWS services & configure
     s3_client = boto3.client("s3")
@@ -40,13 +66,11 @@ def handler(event, context):
     db_island = db_inputs[1]
     db_location = db_inputs[2]
 
-    # TODO: Parameterize output bucket
-    s3_bucket_output = "criobe-images-segmented"
-    s3_bucket_masks = "criobe-images-masks"
-
-    # TODO: Parameterize model path
-    s3_model_bucket = "criobe-models-segmentation"
-    s3_model_name = "detectron2-classifier.pth"
+    # S3 storage configuration
+    s3_bucket_output = params["s3_images_segmented"]
+    s3_bucket_masks = params["s3_images_masks"]
+    s3_model_bucket = params["s3_model_segmentation"]
+    s3_model_name = params["s3_segmentation_model"]
 
     # Get input image object & bucket from event
     s3_image_input = s3_image_output

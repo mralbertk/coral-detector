@@ -10,6 +10,32 @@ from detectron2.engine import DefaultPredictor
 from PIL import Image
 
 
+# This class should be in its own library, but we need to understand
+# Python custom library management better before implementing properly
+class ParamGetter:
+    """Recursively retrieves parameters from Amazon SSM.
+
+    Args:
+        param_path: A string, prefix of all parameters to look up
+    """
+
+    def __init__(self, param_path):
+        self.p_path = param_path
+        self.params = self.get_params()
+
+    def get_params(self):
+        ssm = boto3.client("ssm", region_name="eu-west-1")
+        params = {}
+        ssm_paginator = ssm.get_paginator("get_parameters_by_path")
+        response_iterator = ssm_paginator.paginate(
+            Path=self.p_path,
+            Recursive=True)
+        for response in response_iterator:
+            for param in response["Parameters"]:
+                params[param["Name"].split("/")[-1]] = param["Value"]
+        return params
+
+
 def handler(event, context):
     """TODO: Add docstring"""
 
@@ -26,12 +52,11 @@ def handler(event, context):
         event['Records'][0]['s3']['object']['key'], encoding='utf-8'
     )
 
-    # TODO: Parameterize output bucket
-    s3_bucket_output = "criobe-images-reframed"
-
-    # TODO: Parameterize model path
-    s3_model_bucket = "criobe-models-rotate-crop"
-    s3_model_name = "detectron2-reframe.pth"
+    # S3 resource configuration
+    params = ParamGetter('/coral-detector/').params
+    s3_bucket_output = params["s3_images_reframed"]
+    s3_model_bucket = params["s3_model_reframing"]
+    s3_model_name = params["s3_reframing_model"]
 
     # Get input image object & bucket from event
     s3_image_input = s3_image_output
@@ -152,7 +177,6 @@ def minimum_area_enclosing(contour):
     box = cv2.boxPoints(rect)
     box = np.int0(box)
     screen_cnt = np.array([[i] for i in box.tolist()])
-    # print('Estimated corners:', screenCnt.tolist())
     return screen_cnt
 
 

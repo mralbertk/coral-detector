@@ -6,6 +6,34 @@ from PIL import Image
 
 
 #   /------------------------------------------------/
+#  /                Class Definitions               /
+# /------------------------------------------------/
+
+class ParamGetter:
+    """Recursively retrieves parameters from Amazon SSM.
+
+    Args:
+        param_path: A string, prefix of all parameters to look up
+    """
+
+    def __init__(self, param_path):
+        self.p_path = param_path
+        self.params = self.get_params()
+
+    def get_params(self):
+        ssm = boto3.client("ssm", region_name="eu-west-1")
+        params = {}
+        ssm_paginator = ssm.get_paginator("get_parameters_by_path")
+        response_iterator = ssm_paginator.paginate(
+            Path=self.p_path,
+            Recursive=True)
+        for response in response_iterator:
+            for param in response["Parameters"]:
+                params[param["Name"].split("/")[-1]] = param["Value"]
+        return params
+
+
+#   /------------------------------------------------/
 #  /               Function Definitions             /
 # /------------------------------------------------/
 
@@ -146,15 +174,23 @@ def authenticate():
 #  /                   Configuration                /
 # /------------------------------------------------/
 
+if 'params' not in st.session_state:
+    st.session_state.params = ParamGetter('/coral-detector/').params
+
 # TODO: Parameterize Bucket Names
 # Image Upload Bucket
-s3_bucket_raw = "criobe-images-raw"
+s3_bucket_raw = st.session_state.params["s3_images_raw"]
 
 # Image View Bucket TODO: Update with segmented bucket
-s3_bucket_reframed = "criobe-images-reframed"
-s3_bucket_selection = {"Reframed": "criobe-images-reframed",
-                       "Segmented": "criobe-images-segmented",
+s3_bucket_reframed = st.session_state.params["s3_images_reframed"]
+s3_bucket_selection = {"Reframed": st.session_state.params["s3_images_reframed"],
+                       "Segmented": st.session_state.params["s3_images_segmented"],
                        "Masks": "criobe-images-masks"}
+
+# RDS Configuration
+db_name = st.session_state.params["db-name"]
+db_cluster_arn = st.session_state.params["db-cluster-arn"]
+db_credentials_secret_store_arn = st.session_state.params["cluster-credentials"]
 
 # To keep the UI simple, users can select a desired operation
 # on top of the page.
@@ -282,11 +318,6 @@ if mode == "Export Statistics":
     # AWS clients
     s3_resource = boto3.resource("s3")  # For query options
     rds_client = boto3.client("rds-data")
-
-    # RDS Configuration
-    db_name = "criobe_corals"
-    db_cluster_arn = "arn:aws:rds:eu-west-1:950138825908:cluster:dsti-criobe-db"
-    db_credentials_secret_store_arn = "arn:aws:secretsmanager:eu-west-1:950138825908:secret:rds-db-credentials/cluster-AIT5MBWGBYEYUB6C6HBFTP5GR4/dsti_criobe_app-L17eZ0"
 
     # Get options for selector
     if 'galleries' not in st.session_state:  # Store in session state to avoid reloading
