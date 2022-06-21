@@ -1,0 +1,38 @@
+version: "3.7"
+
+services:
+  frontend:
+    build: frontend
+    image: coral-detector-frontend:dev
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+    volumes:
+      - type: bind
+        source: ./storage
+        target: /storage
+    container_name: "coral-detector-frontend"
+  backend:
+    build: backend
+    image: coral-detector-backend:dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - type: bind
+        source: ./storage
+        target: /storage
+    container_name: "coral-detector-backend"
+  db:
+    image: mysql:8.0.29
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./database/create-db.sql:/docker-entrypoint-initdb.d/1.sql"
+      - "./database/create-user.sql:/docker-entrypoint-initdb.d/2.sql"
+      - "./storage/db:/var/lib/mysql"
+    container_name: "coral-detector-db"
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+
+

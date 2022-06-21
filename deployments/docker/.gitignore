@@ -1,0 +1,2 @@
+# Ignore all subfolders of the storage directory
+storage/*/

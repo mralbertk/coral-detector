@@ -1,0 +1,16 @@
+certifi==2021.10.8
+charset-normalizer==2.0.12
+cryptography==37.0.2
+idna==3.3
+imutils==0.5.4
+numpy==1.22.3
+Pillow==9.1.0
+pymysql==1.0.2
+opencv-python-headless==4.5.5.62
+rawpy==0.17.1
+requests==2.27.1
+torch==1.10.0
+torchaudio==0.10.0
+torchvision==0.11.1
+typing_extensions==4.2.0
+urllib3==1.26.9
