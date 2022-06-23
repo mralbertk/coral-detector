@@ -9,9 +9,12 @@ services:
     depends_on:
       - backend
     volumes:
-      - type: bind
-        source: ./storage
-        target: /storage
+      - ".storage/input:/storage/input"
+      - ".storage/masks:/storage/masks"
+      - ".storage/models:/storage/models"
+      - ".storage/reframed:/storage/reframed"
+      - ".storage/restored:/storage/restored"
+      - ".storage/segmented:/storage/segmented"
     container_name: "coral-detector-frontend"
   backend:
     build: backend
