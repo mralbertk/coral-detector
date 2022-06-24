@@ -10,15 +10,31 @@ Researchers should be able to upload raw images of coral reefs to the applicatio
 automated image treatment steps before executing a segmentation model to detect corals present on 
 the image and generating statistical data for further analysis.
 
-#### Implemented Features
+### Implemented Features
 - Apply underwater image enhancements
-- Automatic perspective correction & cropping of raw coral images
-- Detection of corals
-- Generation of statistics about coral coverage
+- Apply perspective correction
+- Crop to frame
+- Detect coral
+- Generate statistics about coral coverage
 
+## Available Versions
+- Serverless implementation using Amazon Web Services 
+- Local deployment using Docker 
+- View the respective directories for more information
+
+## Use
+- Upload raw images of corals via the image upload menu 
+
+![](imgs/ui-upload-aws.png)
+- View existing images in the image view menu
+
+![](imgs/ui-view-aws.png)
+
+- View or export statistics via the statistics menu
+
+![](imgs/ui-statistics-aws.png)
 
 ## Project Team
-
 ### Students
 **Mohammed BOUAYOUN**  
 mohammed.bouayoun@edu.dsti.institute  
