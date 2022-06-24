@@ -54,24 +54,24 @@ Randomly rearrange channels of the input RGB image.
 
 Aug9_SCL_2726 D09.jpg
 
-![](imgs\image-20220624030538665.png)
+![](imgs/image-20220624030538665.png)
 
 
 
 Aug8_SCL_2726 D09.jpg
 
-![](imgs\image-20220624030638378.png)
+![](imgs/image-20220624030638378.png)
 
 
 
 Aug7_SCL_2726 D09.jpg
 
-<img src="imgs\image-20220624030801994.png" alt="image-20220624030801994" style="zoom: 50%;" />
+<img src="imgs/image-20220624030801994.png" alt="image-20220624030801994" style="zoom: 50%;" />
 
-![](imgs\image-20220624031001992.png)
+![](imgs/image-20220624031001992.png)
 
 
 
 Aug4_SCL_2726 D09.jpg
 
-![](imgs\image-20220624031224636.png)
+![](./imgs/image-20220624031224636.png)
