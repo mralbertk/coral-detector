@@ -9,12 +9,15 @@ services:
     depends_on:
       - backend
     volumes:
-      - ".storage/input:/storage/input"
-      - ".storage/masks:/storage/masks"
-      - ".storage/models:/storage/models"
-      - ".storage/reframed:/storage/reframed"
-      - ".storage/restored:/storage/restored"
-      - ".storage/segmented:/storage/segmented"
+      # This could be one line but we specify
+      # each directory so they are created if
+      # they do not exist.
+      - "./storage/input:/storage/input"
+      - "./storage/masks:/storage/masks"
+      - "./storage/models:/storage/models"
+      - "./storage/reframed:/storage/reframed"
+      - "./storage/restored:/storage/restored"
+      - "./storage/segmented:/storage/segmented"
     container_name: "coral-detector-frontend"
   backend:
     build: backend
